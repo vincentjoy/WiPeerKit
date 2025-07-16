@@ -1,5 +1,5 @@
 
-// swift-tools-version: 6.1
+// swift-tools-version: 6.0
 import PackageDescription
 
 let package = Package(
@@ -11,7 +11,12 @@ let package = Package(
     products: [
         .library(
             name: "WiPeerKit",
-            targets: ["WiPeerKit"]),
+            targets: ["WiPeerKit"]
+        ),
+        .executable(
+            name: "WiPeerKitCLI",
+            targets: ["WiPeerKitCLI"]
+        ),
     ],
     dependencies: [
         // No external dependencies - using only Apple frameworks
@@ -21,6 +26,11 @@ let package = Package(
             name: "WiPeerKit",
             dependencies: [],
             path: "Sources/WiPeerKit"
+        ),
+        .executableTarget(
+            name: "WiPeerKitCLI",
+            dependencies: ["WiPeerKit"],
+            path: "Tools/WiPeerKitCLI"
         ),
         .testTarget(
             name: "WiPeerKitTests",
