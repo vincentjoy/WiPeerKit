@@ -76,9 +76,9 @@ public final class WiPeerKit: Sendable {
     
     // MARK: - Private Properties
     
-    private let serviceDiscovery: ServiceDiscoveryActor
-    private let tcpTransport: TCPTransportActor
-    private let encryption: EncryptionActor
+    private let serviceDiscovery: ServiceDiscoveryProtocol
+    private let tcpTransport: TCPTransportProtocol
+    private let encryption: EncryptionProtocol
     private let messageProtocol: MessageProtocolActor
     
     private var cancellables = Set<AnyCancellable>()
@@ -99,9 +99,9 @@ public final class WiPeerKit: Sendable {
     
     /// Initialize WiPeerKit with custom components (for testing)
     internal init(
-        serviceDiscovery: ServiceDiscoveryActor,
-        tcpTransport: TCPTransportActor,
-        encryption: EncryptionActor,
+        serviceDiscovery: ServiceDiscoveryProtocol,
+        tcpTransport: TCPTransportProtocol,
+        encryption: EncryptionProtocol,
         messageProtocol: MessageProtocolActor
     ) {
         self.serviceDiscovery = serviceDiscovery
