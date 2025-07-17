@@ -90,13 +90,11 @@ final class IntegrationTests: XCTestCase, @unchecked Sendable {
         var receivedMessages: [String] = []
         let allMessagesExpectation = expectation(description: "All messages received")
         
-        await server.setMessageHandler { message in
-            Task { @MainActor in
-                receivedMessages.append(message)
-                
-                if receivedMessages.count == messages.count {
-                    allMessagesExpectation.fulfill()
-                }
+        await server.setMessageHandler { @MainActor message in
+            receivedMessages.append(message)
+            
+            if receivedMessages.count == messages.count {
+                allMessagesExpectation.fulfill()
             }
         }
         

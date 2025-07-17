@@ -57,20 +57,21 @@ actor MessageProtocolActor {
     /// Extract the next complete message from the buffer
     /// - Returns: Complete message data, or nil if no complete message available
     private func extractNextMessage() -> Data? {
+        
         // Need at least header size
         guard receiveBuffer.count >= headerSize else {
             return nil
         }
         
-        // Read length prefix
-        let lengthData = receiveBuffer.prefix(headerSize)
-        let length = lengthData.withUnsafeBytes { bytes in
-            bytes.load(as: UInt32.self).bigEndian
-        }
+        // Convert first 4 bytes to array for safety
+        let headerBytes = [UInt8](receiveBuffer.prefix(4))
+        let length = UInt32(headerBytes[0]) << 24 |
+        UInt32(headerBytes[1]) << 16 |
+        UInt32(headerBytes[2]) << 8 |
+        UInt32(headerBytes[3])
         
         // Validate length
-        guard length > 0 && length <= 1_048_576 else { // Max 1MB per message
-            // Invalid message, clear buffer
+        guard length > 0 && length <= 1_048_576 else {
             receiveBuffer.removeAll()
             return nil
         }
@@ -82,8 +83,9 @@ actor MessageProtocolActor {
             return nil
         }
         
-        // Extract message
-        let messageData = receiveBuffer.subdata(in: headerSize..<totalMessageSize)
+        // Extract message data (skip header)
+        let messageBytes = [UInt8](receiveBuffer.dropFirst(headerSize).prefix(Int(length)))
+        let messageData = Data(messageBytes)
         
         // Remove processed data from buffer
         receiveBuffer.removeFirst(totalMessageSize)
