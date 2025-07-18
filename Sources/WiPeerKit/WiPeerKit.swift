@@ -66,7 +66,7 @@ public final class WiPeerKit: Sendable {
     // MARK: - Properties
     
     /// Current connection state
-    @Published public private(set) var connectionState: ConnectionState = .disconnected
+    @Published public internal(set) var connectionState: ConnectionState = .disconnected
     
     /// Currently discovered peers
     @Published public private(set) var discoveredPeers: [DiscoveredPeer] = []
@@ -77,9 +77,9 @@ public final class WiPeerKit: Sendable {
     // MARK: - Private Properties
     
     private let serviceDiscovery: ServiceDiscoveryProtocol
-    private let tcpTransport: TCPTransportProtocol
-    private let encryption: EncryptionProtocol
-    private let messageProtocol: MessageProtocolActor
+    internal let tcpTransport: TCPTransportProtocol
+    internal let encryption: EncryptionProtocol
+    internal let messageProtocol: MessageProtocolActor
     
     private var cancellables = Set<AnyCancellable>()
     
