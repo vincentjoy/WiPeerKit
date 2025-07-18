@@ -7,13 +7,17 @@
 
 import Foundation
 
-enum SecurityError: LocalizedError, Sendable {
+public enum SecurityError: LocalizedError, Sendable {
     case handshakeTimeout
     case invalidHandshakeState
     case noSymmetricKey
     case handshakeFailed(String)
+    case expiredRequest
+    case invalidSignature
+    case authenticationCancelled
+    case notImplemented
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .handshakeTimeout:
             return "Key exchange handshake timed out"
@@ -23,6 +27,14 @@ enum SecurityError: LocalizedError, Sendable {
             return "No symmetric key established"
         case .handshakeFailed(let reason):
             return "Handshake failed: \(reason)"
+        case .expiredRequest:
+            return "Connection request expired"
+        case .invalidSignature:
+            return "Invalid signature on connection request"
+        case .authenticationCancelled:
+            return "Authentication cancelled by user"
+        case .notImplemented:
+            return "Feature not implemented"
         }
     }
 }
