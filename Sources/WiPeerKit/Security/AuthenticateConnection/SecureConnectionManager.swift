@@ -89,13 +89,13 @@ public actor SecureConnectionManager {
         public let data: Data
     }
     
-    // MARK: - Public Callbacks
+    // MARK: - Private Callbacks
     
     /// Callback when a device requests connection - return true to accept
-    public var onConnectionRequest: (@Sendable (DeviceIdentity) async -> Bool)?
+    private var onConnectionRequest: (@Sendable (DeviceIdentity) async -> Bool)?
     
     /// Callback when PIN input is needed from user
-    public var onPinRequested: (@Sendable () async -> String?)?
+    private var onPinRequested: (@Sendable () async -> String?)?
     
     // MARK: - Private Properties
     
@@ -151,6 +151,21 @@ public actor SecureConnectionManager {
     /// Check if a device is trusted
     public func isDeviceTrusted(_ device: DeviceIdentity) -> Bool {
         trustedDevices.contains(device)
+    }
+    
+    /// Set the connection request callback
+    public func setOnConnectionRequest(_ handler: (@Sendable (DeviceIdentity) async -> Bool)?) {
+        onConnectionRequest = handler
+    }
+    
+    /// Get the current connection request callback
+    public func getOnConnectionRequest() -> (@Sendable (DeviceIdentity) async -> Bool)? {
+        return onConnectionRequest
+    }
+    
+    /// Set the connection request callback
+    public func setPinRequest(_ handler: (@Sendable () async -> String?)?) {
+        onPinRequested = handler
     }
     
     // MARK: - Internal Methods (used by WiPeerKit)
@@ -323,7 +338,7 @@ public actor SecureConnectionManager {
     }
     
     private static func getModelIdentifier() -> String {
-        #if os(iOS)
+#if os(iOS)
         var systemInfo = utsname()
         uname(&systemInfo)
         let modelCode = withUnsafePointer(to: &systemInfo.machine) {
@@ -332,8 +347,8 @@ public actor SecureConnectionManager {
             }
         }
         return modelCode
-        #else
+#else
         return "Mac"
-        #endif
+#endif
     }
 }
