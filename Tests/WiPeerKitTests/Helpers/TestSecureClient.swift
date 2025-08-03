@@ -14,7 +14,7 @@ actor TestSecureClient {
     private let messageProtocol = MessageProtocolActor()
     private let connectionManager: SecureConnectionManager
     
-    var pin: String?
+    private var pin: String?
     
     init() async {
         connectionManager = try! SecureConnectionManager(authMethod: .manualApproval)
@@ -44,6 +44,10 @@ actor TestSecureClient {
         let framedMessage = await messageProtocol.frameMessage(encryptedData)
         
         try await tcpTransport.send(data: framedMessage)
+    }
+    
+    func setPin(_ newPin: String?) {
+        self.pin = newPin
     }
     
     func disconnect() async {
