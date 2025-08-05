@@ -397,41 +397,45 @@ final class WiPeerKitCLI {
     // MARK: - Security Helpers
     
     private func setupConnectionManagerCallbacks() {
-        connectionManager?.onConnectionRequest = { [weak self] device in
-            await MainActor.run {
-                print("\n🔔 Connection request from: \(device.name)")
-                print("   Device ID: \(device.modelIdentifier)")
-                print("   Fingerprint: \(device.fingerprint)")
-                
-                // Check trusted devices
-                if self?.trustedDevices.contains(device.id.uuidString) == true {
-                    print("✅ Auto-accepting trusted device")
-                    return true
-                }
-                
-                // Check security mode
-                switch self?.securityMode {
-                case .trusted:
-                    print("❌ Device not in trusted list")
-                    return false
+        Task {
+            await connectionManager?.setOnConnectionRequest { [weak self] device in
+                await MainActor.run {
+                    print("\n🔔 Connection request from: \(device.name)")
+                    print("   Device ID: \(device.modelIdentifier)")
+                    print("   Fingerprint: \(device.fingerprint)")
                     
-                case .manual:
-                    print("Accept connection? (yes/no): ", terminator: "")
-                    fflush(stdout)
-                    let response = readLine()?.lowercased()
-                    return response == "yes" || response == "y"
+                    // Check trusted devices
+                    if self?.trustedDevices.contains(device.id.uuidString) == true {
+                        print("✅ Auto-accepting trusted device")
+                        return true
+                    }
                     
-                default:
-                    return true
+                    // Check security mode
+                    switch self?.securityMode {
+                    case .trusted:
+                        print("❌ Device not in trusted list")
+                        return false
+                        
+                    case .manual:
+                        print("Accept connection? (yes/no): ", terminator: "")
+                        fflush(stdout)
+                        let response = readLine()?.lowercased()
+                        return response == "yes" || response == "y"
+                        
+                    default:
+                        return true
+                    }
                 }
             }
         }
         
-        connectionManager?.onPinRequested = { [weak self] in
-            await MainActor.run {
-                print("📝 Enter PIN shown on other device: ", terminator: "")
-                fflush(stdout)
-                return readLine()
+        Task {
+            await connectionManager?.setPinRequest { [weak self] in
+                await MainActor.run {
+                    print("📝 Enter PIN shown on other device: ", terminator: "")
+                    fflush(stdout)
+                    return readLine()
+                }
             }
         }
     }
@@ -477,62 +481,3 @@ final class WiPeerKitCLI {
         }
     }
 }
-
-// MARK: - Main Entry Point
-
-@main
-struct CLIMain {
-    static func main() async {
-        // Print security notice
-        print("""
-        ┌─────────────────────────────────────────────────┐
-        │  🔐 WiPeerKit Secure Communication Tool         │
-        │                                                 │
-        │  This tool demonstrates secure P2P              │
-        │  communication with:                            │
-        │  • End-to-end encryption (AES-256-GCM)        │
-        │  • Ephemeral key exchange (ECDH)              │
-        │  • Device authentication                       │
-        │  • Perfect forward secrecy                     │
-        └─────────────────────────────────────────────────┘
-        
-        """)
-        
-        let cli = await WiPeerKitCLI()
-        await cli.run()
-    }
-}
-
-// MARK: - Build Instructions
-
-/*
- To build and run the CLI tool:
- 
- 1. From the package root:
- swift build
- swift run WiPeerKitCLI
- 
- 2. Or build for release:
- swift build -c release
- ./.build/release/WiPeerKitCLI
- 
- 3. To install system-wide:
- swift build -c release
- sudo cp ./.build/release/WiPeerKitCLI /usr/local/bin/wipeerkit
- 
- Example usage:
- 
- Terminal 1 (Server):
- $ wipeerkit
- > security pin
- > advertise "My Mac"
- 🔑 Connection PIN: 425-817
- 
- Terminal 2 (Client):
- $ wipeerkit
- > browse
- > connect 1
- > pin 425817
- ✅ Secure connection established!
- > send "Hello, encrypted world!"
- */
