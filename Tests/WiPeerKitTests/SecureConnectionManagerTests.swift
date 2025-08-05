@@ -50,8 +50,10 @@ final class SecureConnectionManagerTests: XCTestCase {
         let pinManager = try SecureConnectionManager(authMethod: .pin("425817"))
         
         // Setup PIN callback
-        pinManager.onPinRequested = {
-            return "425817" // Correct PIN
+        Task {
+            await pinManager.setPinRequest {
+                return "425817" // Correct PIN
+            }
         }
         
         // When - Create connection request
@@ -74,8 +76,10 @@ final class SecureConnectionManagerTests: XCTestCase {
         let requestData = try JSONEncoder().encode(approval.request)
         
         // Setup approval callback
-        connectionManager.onConnectionRequest = { device in
-            return true // Approve
+        Task {
+            await connectionManager.setOnConnectionRequest { device in
+                return true // Approve
+            }
         }
         
         // When - Validate the request
