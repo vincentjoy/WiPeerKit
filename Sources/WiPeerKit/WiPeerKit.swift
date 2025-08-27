@@ -6,7 +6,7 @@ import Foundation
 
 /// Main entry point for WiPeerKit framework
 @MainActor
-public final class WiPeerKit: Sendable {
+public final class WiPeerKit {
     
     // MARK: - Public Types
     
@@ -204,32 +204,26 @@ public final class WiPeerKit: Sendable {
         await serviceDiscovery.discoveredPeersPublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] peers in
-                Task { @MainActor in
-                    self?.discoveredPeers = peers
-                }
+                self?.discoveredPeers = peers
             }
             .store(in: &cancellables)
         
         // Transport data reception
         await tcpTransport.setDataHandler { [weak self] data in
-            Task { @MainActor in
-                await self?.handleReceivedData(data)
-            }
+            await self?.handleReceivedData(data)
         }
         
         // Transport connection state
         await tcpTransport.connectionStatePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                Task { @MainActor in
-                    switch state {
-                    case .connected:
-                        self?.connectionState = .connected
-                    case .disconnected:
-                        self?.connectionState = .disconnected
-                    case .failed(let error):
-                        self?.connectionState = .failed(error)
-                    }
+                switch state {
+                case .connected:
+                    self?.connectionState = .connected
+                case .disconnected:
+                    self?.connectionState = .disconnected
+                case .failed(let error):
+                    self?.connectionState = .failed(error)
                 }
             }
             .store(in: &cancellables)
@@ -237,18 +231,16 @@ public final class WiPeerKit: Sendable {
     
     private func handleReceivedData(_ data: Data) async {
         await messageProtocol.processIncomingData(data) { [weak self] completeMessage in
-            Task { @MainActor in
-                guard let self = self else { return }
+            guard let self = self else { return }
+            
+            do {
+                // Decrypt the message
+                let decryptedData = try await self.encryption.decrypt(completeMessage)
                 
-                do {
-                    // Decrypt the message
-                    let decryptedData = try await self.encryption.decrypt(completeMessage)
-                    
-                    // Notify the client
-                    self.onDataReceived?(decryptedData)
-                } catch {
-                    print("Failed to decrypt message: \(error)")
-                }
+                // Notify the client
+                await self.onDataReceived?(decryptedData)
+            } catch {
+                print("Failed to decrypt message: \(error)")
             }
         }
     }
