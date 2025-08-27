@@ -7,7 +7,7 @@
 
 import Foundation
 import WiPeerKit
-import Combine
+@preconcurrency import Combine
 
 /// Command-line tool demonstrating secure WiPeerKit usage
 @MainActor
@@ -45,7 +45,7 @@ final class WiPeerKitCLI {
     
     private func setupHandlers() async {
         // Connection state monitoring
-        peerKit.$connectionState
+        await peerKit.$connectionState
             .sink { state in
                 Task { @MainActor in
                     self.handleConnectionStateChange(state)
@@ -54,7 +54,7 @@ final class WiPeerKitCLI {
             .store(in: &cancellables)
         
         // Discovered peers monitoring
-        peerKit.$discoveredPeers
+        await peerKit.$discoveredPeers
             .dropFirst()
             .sink { peers in
                 Task { @MainActor in
@@ -64,9 +64,9 @@ final class WiPeerKitCLI {
             .store(in: &cancellables)
         
         // Message reception
-        peerKit.onDataReceived = { data in
+        await peerKit.setOnDataReceived { [weak self] data in
             Task { @MainActor in
-                self.handleReceivedData(data)
+                self?.handleReceivedData(data)
             }
         }
     }
@@ -212,7 +212,7 @@ final class WiPeerKitCLI {
     // MARK: - Command Handlers
     
     private func startAdvertising(name: String?) async {
-        let deviceName = name ?? ProcessInfo.processInfo.hostName ?? "WiPeerKit-CLI"
+        let deviceName = name ?? ProcessInfo.processInfo.hostName
         
         do {
             // Setup security
@@ -235,7 +235,7 @@ final class WiPeerKitCLI {
             
             setupConnectionManagerCallbacks()
             
-            peerKit.startAdvertising(serviceName: deviceName)
+            await peerKit.startAdvertising(serviceName: deviceName)
             isAdvertising = true
             print("📢 Advertising as '\(deviceName)'")
             
@@ -245,21 +245,23 @@ final class WiPeerKitCLI {
     }
     
     private func startBrowsing() {
-        peerKit.startBrowsing()
-        isBrowsing = true
-        print("🔍 Browsing for peers...")
+        Task {
+            await peerKit.startBrowsing()
+            isBrowsing = true
+            print("🔍 Browsing for peers...")
+        }
     }
     
     private func connectToPeer(argument: String?) async {
         guard let indexStr = argument,
               let index = Int(indexStr),
               index > 0,
-              index <= peerKit.discoveredPeers.count else {
+              await index <= peerKit.discoveredPeers.count else {
             print("❌ Invalid peer number")
             return
         }
         
-        let peer = peerKit.discoveredPeers[index - 1]
+        let peer = await peerKit.discoveredPeers[index - 1]
         print("🔗 Connecting to \(peer.name)...")
         
         do {
@@ -309,7 +311,7 @@ final class WiPeerKitCLI {
             return
         }
         
-        guard case .connected = peerKit.connectionState else {
+        guard case .connected = await peerKit.connectionState else {
             print("❌ Not connected to any peer")
             return
         }
@@ -370,17 +372,23 @@ final class WiPeerKitCLI {
     }
     
     private func disconnect() {
-        peerKit.disconnect()
-        print("👋 Disconnected")
+        Task {
+            await peerKit.disconnect()
+            print("👋 Disconnected")
+        }
     }
     
     private func printStatus() {
         print("\n--- Status ---")
-        print("Connection: \(connectionStateDescription)")
+        Task {
+            print("Connection: \(await getConnectionStateDescription())")
+        }
         print("Security Mode: \(securityMode.rawValue)")
         print("Advertising: \(isAdvertising ? "Yes" : "No")")
         print("Browsing: \(isBrowsing ? "Yes" : "No")")
-        print("Discovered peers: \(peerKit.discoveredPeers.count)")
+        Task {
+            print("Discovered peers: \(await peerKit.discoveredPeers.count)")
+        }
         print("Trusted devices: \(trustedDevices.count)")
         
         if let pin = currentPIN, isAdvertising && securityMode == .pin {
@@ -389,9 +397,11 @@ final class WiPeerKitCLI {
     }
     
     private func cleanup() {
-        peerKit.disconnect()
-        peerKit.stopAdvertising()
-        peerKit.stopBrowsing()
+        Task {
+            await peerKit.disconnect()
+            await peerKit.stopAdvertising()
+            await peerKit.stopBrowsing()
+        }
     }
     
     // MARK: - Security Helpers
@@ -430,7 +440,7 @@ final class WiPeerKitCLI {
         }
         
         Task {
-            await connectionManager?.setPinRequest { [weak self] in
+            await connectionManager?.setPinRequest {
                 await MainActor.run {
                     print("📝 Enter PIN shown on other device: ", terminator: "")
                     fflush(stdout)
@@ -468,8 +478,8 @@ final class WiPeerKitCLI {
     
     // MARK: - Utilities
     
-    private var connectionStateDescription: String {
-        switch peerKit.connectionState {
+    private func getConnectionStateDescription() async -> String {
+        switch await peerKit.connectionState {
         case .connected:
             return "Connected ✅ (Encrypted with ephemeral keys)"
         case .connecting:

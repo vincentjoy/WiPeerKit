@@ -5,8 +5,7 @@ import Foundation
 @preconcurrency import Combine
 
 /// Main entry point for WiPeerKit framework
-@MainActor
-public final class WiPeerKit {
+public actor WiPeerKit {
     
     // MARK: - Public Types
     
@@ -197,14 +196,31 @@ public final class WiPeerKit {
         try await send(data: data)
     }
     
+    /// An actor isolated setter for onDataReceived closure
+    public func setOnDataReceived(_ handler: @escaping @Sendable (Data) -> Void) {
+        self.onDataReceived = handler
+    }
+    
     // MARK: - Private Methods
+    
+    // MARK: - Actor-isolated setters
+    private func setDiscoveredPeers(_ peers: [DiscoveredPeer]) {
+        self.discoveredPeers = peers
+    }
+    
+    private func setConnectionState(_ state: ConnectionState) {
+        self.connectionState = state
+    }
     
     private func setupBindings() async {
         // Service discovery bindings
-        await serviceDiscovery.discoveredPeersPublisher
-            .receive(on: DispatchQueue.main)
+        let peersPublisher = await serviceDiscovery.discoveredPeersPublisher
+        peersPublisher
             .sink { [weak self] peers in
-                self?.discoveredPeers = peers
+                guard let self else { return }
+                Task {
+                    await self.setDiscoveredPeers(peers)
+                }
             }
             .store(in: &cancellables)
         
@@ -214,16 +230,23 @@ public final class WiPeerKit {
         }
         
         // Transport connection state
-        await tcpTransport.connectionStatePublisher
-            .receive(on: DispatchQueue.main)
+        let connPublisher = await tcpTransport.connectionStatePublisher
+        connPublisher
             .sink { [weak self] state in
+                guard let self else { return }
                 switch state {
                 case .connected:
-                    self?.connectionState = .connected
+                    Task {
+                        await self.setConnectionState(.connected)
+                    }
                 case .disconnected:
-                    self?.connectionState = .disconnected
+                    Task {
+                        await self.setConnectionState(.disconnected)
+                    }
                 case .failed(let error):
-                    self?.connectionState = .failed(error)
+                    Task {
+                        await self.setConnectionState(.failed(error))
+                    }
                 }
             }
             .store(in: &cancellables)
