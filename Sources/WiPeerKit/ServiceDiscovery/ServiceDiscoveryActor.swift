@@ -38,10 +38,7 @@ actor ServiceDiscoveryActor: ServiceDiscoveryProtocol {
     
     init() {
         self.delegate = ServiceDiscoveryDelegate()
-        
-        Task {
-            await setupDelegateCallbacks()
-        }
+        setupDelegateCallbacks()
     }
     
     // MARK: - ServiceDiscoveryProtocol Methods
@@ -89,20 +86,26 @@ actor ServiceDiscoveryActor: ServiceDiscoveryProtocol {
     
     // MARK: - Private Methods
     
-    private func setupDelegateCallbacks() {
-        delegate.onServiceFound = { [weak self] service in
+    nonisolated private func setupDelegateCallbacks() {
+        
+        // Adding `@Sendable` to the closure.
+        // This explicitly tells the compiler that the closure is safe to send across
+        // concurrency domains, even though `NetService` is not a Sendable type.
+        // This is a necessary concession when working with older, delegate-based APIs.
+        
+        delegate.onServiceFound = { @Sendable [weak self] service in
             Task {
                 await self?.handleServiceFound(service)
             }
         }
         
-        delegate.onServiceRemoved = { [weak self] service in
+        delegate.onServiceRemoved = { @Sendable [weak self] service in
             Task {
                 await self?.handleServiceRemoved(service)
             }
         }
         
-        delegate.onServiceResolved = { [weak self] service in
+        delegate.onServiceResolved = { @Sendable [weak self] service in
             Task {
                 await self?.handleServiceResolved(service)
             }

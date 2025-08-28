@@ -10,9 +10,9 @@
 
 /// Thread-safe delegate handler for NetService
 final class ServiceDiscoveryDelegate: NSObject, NetServiceDelegate, NetServiceBrowserDelegate, @unchecked Sendable {
-    var onServiceFound: (@Sendable (NetService) async -> Void)?
-    var onServiceRemoved: (@Sendable (NetService) async -> Void)?
-    var onServiceResolved: (@Sendable (NetService) async -> Void)?
+    var onServiceFound: ((NetService) -> Void)?
+    var onServiceRemoved: ((NetService) -> Void)?
+    var onServiceResolved: ((NetService) -> Void)?
     
     // MARK: - NetServiceDelegate
     
@@ -25,23 +25,17 @@ final class ServiceDiscoveryDelegate: NSObject, NetServiceDelegate, NetServiceBr
     }
     
     func netServiceDidResolveAddress(_ sender: NetService) {
-        Task {
-            await onServiceResolved?(sender)
-        }
+        onServiceResolved?(sender)
     }
     
     // MARK: - NetServiceBrowserDelegate
     
     func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
-        Task {
-            await onServiceFound?(service)
-        }
+        onServiceFound?(service)
     }
      
     func netServiceBrowser(_ browser: NetServiceBrowser, didRemove service: NetService, moreComing: Bool) {
-        Task {
-            await onServiceRemoved?(service)
-        }
+        onServiceRemoved?(service)
     }
     
     func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String : NSNumber]) {
