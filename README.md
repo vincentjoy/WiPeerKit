@@ -50,7 +50,7 @@ Or add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://git@github.com:vincentjoy/WiPeerKit.git", from: "1.0.3")
+    .package(url: "https://git@github.com:vincentjoy/WiPeerKit.git", from: "1.0.1")
 ]
 ```
 
@@ -568,7 +568,7 @@ print("Round trip time: \(stats.roundTripTime)ms")
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions!
 
 ### Development Setup
 
