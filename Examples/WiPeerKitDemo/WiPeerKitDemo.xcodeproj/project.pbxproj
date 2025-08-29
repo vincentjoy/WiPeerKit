@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		BF2332642E6192F800BB0C0B /* WiPeerKit in Frameworks */ = {isa = PBXBuildFile; productRef = BF2332632E6192F800BB0C0B /* WiPeerKit */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXFileReference section */
 		BF23324B2E618A2B00BB0C0B /* WiPeerKitDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WiPeerKitDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -40,7 +36,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF2332642E6192F800BB0C0B /* WiPeerKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,7 +78,6 @@
 			);
 			name = WiPeerKitDemo;
 			packageProductDependencies = (
-				BF2332632E6192F800BB0C0B /* WiPeerKit */,
 			);
 			productName = WiPeerKitDemo;
 			productReference = BF23324B2E618A2B00BB0C0B /* WiPeerKitDemo.app */;
@@ -114,7 +108,6 @@
 			mainGroup = BF2332422E618A2B00BB0C0B;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				BF2332622E6192F800BB0C0B /* XCLocalSwiftPackageReference "../../../WiPeerKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BF23324C2E618A2B00BB0C0B /* Products */;
@@ -352,20 +345,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCLocalSwiftPackageReference section */
-		BF2332622E6192F800BB0C0B /* XCLocalSwiftPackageReference "../../../WiPeerKit" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../../WiPeerKit;
-		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		BF2332632E6192F800BB0C0B /* WiPeerKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = WiPeerKit;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = BF2332432E618A2B00BB0C0B /* Project object */;
 }
