@@ -6,24 +6,67 @@
 //
 
 import SwiftUI
-
-#if canImport(WiPeerKit)
-    #warning("WiPeerKit CAN be imported")
-#else
-    #error("WiPeerKit CANNOT be imported")
-#endif
-
 import WiPeerKit
 
 struct ContentView: View {
+    @StateObject private var viewModel = PeerViewModel()
+    @State private var showingSettings = false
+    @State private var showingConnectionRequest = false
+    @State private var pendingDevice: SecureConnectionManager.DeviceIdentity?
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Connection Status Bar
+                    ConnectionStatusView(viewModel: viewModel)
+                        .padding(.horizontal)
+                        .padding(.top, 8)
+                    
+                    // Main Content
+                    if viewModel.connectionState == .connected {
+                        ChatView(viewModel: viewModel)
+                    } else {
+                        DiscoveryView(viewModel: viewModel)
+                    }
+                }
+            }
+            .navigationTitle("WiPeerKit Demo")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingSettings = true }) {
+                        Image(systemName: "gearshape.fill")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView(viewModel: viewModel)
+            }
+            .alert("Connection Request", isPresented: $showingConnectionRequest) {
+                if let device = pendingDevice {
+                    Text("\(device.name) wants to connect\n\nFingerprint: \(device.fingerprint)")
+                } else {
+                    Text("Incoming connection request")
+                }
+            } primaryButton: .default(Text("Accept")) {
+                viewModel.approveConnection(true)
+            } secondaryButton: .cancel(Text("Reject")) {
+                viewModel.approveConnection(false)
+            }
+            .onReceive(viewModel.connectionRequestPublisher) { device in
+                pendingDevice = device
+                showingConnectionRequest = true
+            }
         }
-        .padding()
     }
 }
 
