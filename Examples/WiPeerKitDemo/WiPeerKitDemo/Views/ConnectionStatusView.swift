@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WiPeerKit
 
 struct ConnectionStatusView: View {
     @ObservedObject var viewModel: PeerViewModel
@@ -31,7 +32,7 @@ struct ConnectionStatusView: View {
             Spacer()
             
             // Security indicator
-            if viewModel.connectionState == .connected {
+            if case WiPeerKit.ConnectionState.connected = viewModel.connectionState {
                 Image(systemName: "lock.shield.fill")
                     .foregroundColor(.green)
                     .font(.caption)

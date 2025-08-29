@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WiPeerKit
 
 struct DiscoveryView: View {
     @ObservedObject var viewModel: PeerViewModel
@@ -82,13 +83,17 @@ struct DiscoveryView: View {
         .alert("Enter PIN", isPresented: $showingPINEntry) {
             TextField("6-digit PIN", text: $enteredPIN)
                 .keyboardType(.numberPad)
-        } primaryButton: .default(Text("Connect")) {
-            if let peer = viewModel.selectedPeer {
-                viewModel.connectToPeer(peer, pin: enteredPIN)
+            
+            Button("Connect") {
+                if let peer = viewModel.selectedPeer {
+                    viewModel.connectToPeer(peer, pin: enteredPIN)
+                }
+                enteredPIN = ""
             }
-            enteredPIN = ""
-        } secondaryButton: .cancel {
-            enteredPIN = ""
+            
+            Button("Cancel", role: .cancel) {
+                enteredPIN = ""
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ struct ContentView: View {
                         .padding(.top, 8)
                     
                     // Main Content
-                    if viewModel.connectionState == .connected {
+                    if case WiPeerKit.ConnectionState.connected = .connected {
                         ChatView(viewModel: viewModel)
                     } else {
                         DiscoveryView(viewModel: viewModel)
@@ -52,15 +52,21 @@ struct ContentView: View {
                 SettingsView(viewModel: viewModel)
             }
             .alert("Connection Request", isPresented: $showingConnectionRequest) {
+                
                 if let device = pendingDevice {
                     Text("\(device.name) wants to connect\n\nFingerprint: \(device.fingerprint)")
                 } else {
                     Text("Incoming connection request")
                 }
-            } primaryButton: .default(Text("Accept")) {
-                viewModel.approveConnection(true)
-            } secondaryButton: .cancel(Text("Reject")) {
-                viewModel.approveConnection(false)
+                
+                
+                Button("Accept") {
+                    viewModel.approveConnection(true)
+                }
+                
+                Button("Reject", role: .cancel) {
+                    viewModel.approveConnection(false)
+                }
             }
             .onReceive(viewModel.connectionRequestPublisher) { device in
                 pendingDevice = device
