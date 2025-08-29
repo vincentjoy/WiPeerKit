@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+#if canImport(WiPeerKit)
+    #warning("WiPeerKit CAN be imported")
+#else
+    #error("WiPeerKit CANNOT be imported")
+#endif
+
+import WiPeerKit
+
 struct ContentView: View {
     var body: some View {
         VStack {
